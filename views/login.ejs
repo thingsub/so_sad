@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>로그인</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  </head>
+  <body>
+    <div class="login-container">
+      <h2>로그인</h2>
+      <form id="loginForm" onsubmit="return loginUser(event);">
+        <div>
+          <label for="id">아이디:</label>
+          <input type="id" id="id" name="id" required />
+        </div>
+        <div>
+          <label for="password">비밀번호:</label>
+          <input type="password" id="password" name="password" required />
+        </div>
+        <button type="submit">로그인</button>
+      </form>
+      <p>계정이 없으신가요? <a href="/register">회원가입</a></p>
+    </div>
+
+    <script>
+      function loginUser(event) {
+        event.preventDefault(); // 기본 폼 제출 방지
+
+        const id = document.getElementById("id").value;
+        const password = document.getElementById("password").value;
+
+        axios
+          .post("/login", {
+            id,
+            password,
+          })
+          .then((response) => {
+            if (response.status === 200 && response.data.token) {
+              // 토큰을 localStorage에 저장하고 홈 페이지로 이동
+              localStorage.setItem("token", response.data.token);
+              window.location.href = "/home";
+            }
+          })
+          .catch((error) => {
+            if (error.response && error.response.status === 400) {
+              alert("로그인 실패: 잘못된 ID 또는 비밀번호입니다.");
+            } else {
+              console.error("서버 오류:", error);
+              alert("서버 오류가 발생했습니다.");
+            }
+          });
+
+        return false; // 폼이 실제로 제출되지 않도록 함
+      }
+    </script>
+  </body>
+</html>
