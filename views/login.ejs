@@ -25,6 +25,14 @@
     </div>
 
     <script>
+      window.onload = function () {
+        const token = localStorage.getItem("token");
+        if (token) {
+          // 토큰이 유효하다면 /home으로 이동
+          window.location.href = "/home";
+        }
+      };
+
       function loginUser(event) {
         event.preventDefault(); // 기본 폼 제출 방지
 

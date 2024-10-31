@@ -13,21 +13,18 @@ module.exports = async (req, res, next) => {
     "애초에 Authorization 헤더 내 값이 존재하나?:",
     req.headers.authorization
   );
-  // console.log("혹시 이상한 곳 간 것 아냐?? 쿠키라던가:", req.cookies);
 
   const token = req.headers.authorization?.split(" ")[1]; // 헤더에서 토큰 분리
   console.log("미들웨어가 받은 토큰:", token); // 토큰이 제대로 전달되었는지 확인
 
   // 이 코드가 여기 있는게 타당하진 않다만
   if (!req.headers.authorization) {
-    console.log(
-      "미들웨어.js : auth 헤더가 없습니다. 로그인으로 리다이렉트합니다 ㅋ."
-    );
+    console.log("auth 헤더가 없습니다. 로그인으로 리다이렉트합니다 ㅋ.");
     return res.status(401).json({ message: "헤더도 없는데 토큰은 무슨 " });
   }
 
   if (!token) {
-    console.log("미들웨어.js : 토큰이 없습니다. 로그인으로 리다이렉트합니다.");
+    console.log("토큰이 없습니다. 로그인으로 리다이렉트합니다.");
     return res
       .status(401)
       .json({ message: "토큰이 없습니다. 인증이 거부되었습니다." });
@@ -36,7 +33,7 @@ module.exports = async (req, res, next) => {
   // JWT 토큰 검증
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    //const user = await User.findOne({id : decoded.userId});
+    const user = await User.findOne({ id: decoded.userId });
 
     if (!user) {
       return res.status(401).json({ message: "사용자를 찾을 수 없습니다." });

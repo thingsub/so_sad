@@ -1,111 +1,139 @@
 <!DOCTYPE html>
 <html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>회원가입</title>
-    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="/styles.css" />
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script>
-        function validatePasswords() {
-            const password1 = document.getElementById('password').value;
-            const password2 = document.getElementById('confirm-password').value;
-            const submitButton = document.getElementById('submit-button');
-            const passwordFeedback = document.getElementById('password-feedback');
+      window.onload = function () {
+        // 토큰 확인 및 리다이렉트
+        const token = localStorage.getItem("token");
+        if (token) {
+          window.location.href = "/home";
+          return;
+        }
 
-            if (password1 !== password2) {
-                passwordFeedback.textContent = '비밀번호가 일치하지 않습니다.';
-                passwordFeedback.style.color = 'red';
-                submitButton.disabled = true;
+        // 비밀번호 확인 로직
+        document
+          .getElementById("confirm-password")
+          .addEventListener("input", validatePasswords);
+        document
+          .getElementById("check-id-button")
+          .addEventListener("click", checkIdAvailability);
+        document.querySelector("form").addEventListener("submit", registerUser);
+      };
+
+      function validatePasswords() {
+        const password1 = document.getElementById("password").value;
+        const password2 = document.getElementById("confirm-password").value;
+        const submitButton = document.getElementById("submit-button");
+        const passwordFeedback = document.getElementById("password-feedback");
+
+        if (password1 !== password2) {
+          passwordFeedback.textContent = "비밀번호가 일치하지 않습니다.";
+          passwordFeedback.style.color = "red";
+          submitButton.disabled = true;
+        } else {
+          passwordFeedback.textContent = "비밀번호가 일치합니다.";
+          passwordFeedback.style.color = "green";
+          submitButton.disabled = !isIdAvailable;
+        }
+      }
+
+      let isIdAvailable = false;
+
+      function checkIdAvailability() {
+        const idInput = document.getElementById("id").value;
+        const feedback = document.getElementById("id-feedback");
+
+        if (idInput.trim() === "") {
+          alert("아이디를 입력하세요.");
+          return;
+        }
+
+        axios
+          .post("/check-id", { id: idInput })
+          .then((response) => {
+            if (response.data.available) {
+              alert("사용 가능한 아이디입니다.");
+              isIdAvailable = true;
             } else {
-                passwordFeedback.textContent = '비밀번호가 일치합니다.';
-                passwordFeedback.style.color = 'green';
-                submitButton.disabled = !isIdAvailable;
+              alert("중복된 아이디입니다.");
+              isIdAvailable = false;
             }
-        }
+            validatePasswords();
+          })
+          .catch((error) => {
+            console.error(
+              "오류 발생:",
+              error.response ? error.response.data : error.message
+            );
+            feedback.textContent = "서버 오류가 발생했습니다.";
+          });
+      }
 
-        let isIdAvailable = false;
+      function registerUser(event) {
+        event.preventDefault();
+        const id = document.getElementById("id").value;
+        const password = document.getElementById("password").value;
+        const confirmPassword =
+          document.getElementById("confirm-password").value;
 
-        function checkIdAvailability() {
-            const idInput = document.getElementById('id').value;
-            const feedback = document.getElementById('id-feedback');
-
-            if (idInput.trim() === '') {
-                alert('아이디를 입력하세요.');
-                return;
+        axios
+          .post("/register", { id, password, confirmPassword })
+          .then((response) => {
+            if (response.status === 201) {
+              alert("회원가입 완료! 로그인 페이지로 이동합니다.");
+              window.location.href = "/login";
             }
-
-            axios.post('/check-id', { id: idInput })
-                .then(response => {
-                    if (response.data.available) {
-                        alert('사용 가능한 아이디입니다.');
-                        isIdAvailable = true;
-                    } else {
-                        alert('중복된 아이디입니다.');
-                        isIdAvailable = false;
-                    }
-                    validatePasswords();
-                })
-                .catch(error => {
-                    console.error('오류 발생:', error.response ? error.response.data : error.message);
-                    feedback.textContent = '서버 오류가 발생했습니다.';
-                });
-        }
-
-        function registerUser(event) {
-            event.preventDefault();  // 기본 제출 동작 방지
-            const id = document.getElementById('id').value;
-            const password = document.getElementById('password').value;
-            const confirmPassword = document.getElementById('confirm-password').value;
-
-            axios.post('/register', { id, password, confirmPassword })
-                .then(response => {
-                    if (response.status === 201) {
-                        // 회원가입 성공 시 로그인 페이지로 리다이렉트
-                        alert('회원가입 완료! 로그인 페이지로 이동합니다.');
-                        window.location.href = '/login';
-                    }
-                })
-                .catch(error => {
-                    if (error.response && error.response.status === 400) {
-                        // 서버에서 보낸 오류 메시지 출력
-                        alert(error.response.data.message);
-                    } else if (error.response && error.response.status === 500) {
-                        alert('서버 오류가 발생했습니다.');
-                    } else {
-                        alert('알 수 없는 오류가 발생했습니다.');
-                    }
-                });
-        }
-
-        window.onload = function() {
-            document.getElementById('confirm-password').addEventListener('input', validatePasswords);
-            document.getElementById('check-id-button').addEventListener('click', checkIdAvailability);
-            document.querySelector('form').addEventListener('submit', registerUser);
-        };
+          })
+          .catch((error) => {
+            if (error.response && error.response.status === 400) {
+              alert(error.response.data.message);
+            } else if (error.response && error.response.status === 500) {
+              alert("서버 오류가 발생했습니다.");
+            } else {
+              alert("알 수 없는 오류가 발생했습니다.");
+            }
+          });
+      }
     </script>
-</head>
-<body>
+  </head>
+  <body>
     <div class="register-container">
-        <h2>회원가입</h2>
-        <form>
-            <div>
-                <label for="id">아이디</label>
-                <input type="text" id="id" name="id" required>
-                <button type="button" id="check-id-button">중복 체크</button>
-                <div id="id-feedback"></div>
-            </div>
-            <div>
-                <label for="password">비밀번호</label>
-                <input type="password" id="password" name="password" required oninput="validatePasswords();">
-            </div>
-            <div>
-                <label for="confirm-password">비밀번호 확인</label>
-                <input type="password" id="confirm-password" name="confirmPassword" required oninput="validatePasswords();">
-                <div id="password-feedback"></div>
-            </div>
-            <button type="submit" id="submit-button" disabled>회원가입</button>
-        </form>
+      <h2>회원가입</h2>
+      <form>
+        <div>
+          <label for="id">아이디</label>
+          <input type="text" id="id" name="id" required />
+          <button type="button" id="check-id-button">중복 체크</button>
+          <div id="id-feedback"></div>
+        </div>
+        <div>
+          <label for="password">비밀번호</label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            required
+            oninput="validatePasswords();"
+          />
+        </div>
+        <div>
+          <label for="confirm-password">비밀번호 확인</label>
+          <input
+            type="password"
+            id="confirm-password"
+            name="confirmPassword"
+            required
+            oninput="validatePasswords();"
+          />
+          <div id="password-feedback"></div>
+        </div>
+        <button type="submit" id="submit-button" disabled>회원가입</button>
+      </form>
     </div>
-</body>
+  </body>
 </html>
