@@ -5,22 +5,24 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
 // 원래 login으로의 redirect만 남겼는데 배포할 때 보니까 login 거쳐서 home으로 감
-exports.root = async (req, res) => {
-  const token = req.headers.authorization?.split(" ")[1];
+// exports.root = async (req, res) => {
+//   const token = req.headers.authorization?.split(" ")[1];
 
-  if (token) {
-    console.log("토큰이 존재합니다:", token);
-    try {
-      jwt.verify(token, process.env.JWT_SECRET);
-      return res.redirect("/home"); // 토큰이 유효하면 /home으로 리다이렉트
-    } catch (err) {
-      return res.redirect("/login");
-    }
-  } else {
-    console.log("토큰이 없습니다. 다음 미들웨어로 이동합니다 ^오^");
-    return res.redirect("/home");
-  }
-};
+//   if (token) {
+//     console.log("토큰이 존재합니다:", token);
+//     try {
+//       jwt.verify(token, process.env.JWT_SECRET);
+//       return res.redirect("/home"); // 토큰이 유효하면 /home으로 리다이렉트
+//     } catch (err) {
+//       return res.redirect("/login");
+//     }
+//   } else {
+//     console.log("토큰이 없습니다. 다음 미들웨어로 이동합니다 ^오^");
+//     return res.redirect("/home");
+//   }
+// };
+
+exports.root = async (req, res) => res.redirect("/login");
 
 exports.register = async (req, res) => {
   try {
